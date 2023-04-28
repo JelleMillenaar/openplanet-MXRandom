@@ -5,33 +5,30 @@ namespace RMC
 #if TMNEXT
         if (Permissions::PlayLocalMap()) {
 #endif
-            if (UI::GreenButton(Icons::ClockO + " Start Random Map Challenge")){
-                selectedGameMode = GameMode::Challenge;
-                startnew(Start);
-            }
-            if (UI::GreenButton(Icons::Heart + " Start Random Map Survival")){
-                selectedGameMode = GameMode::Survival;
-                startnew(Start);
-            }
-            UI::SetNextItemWidth(100);
-            if (UI::BeginCombo("##GoalMedalObjectiveMode", PluginSettings::RMC_GoalMedal)){
-                for (uint i = 0; i < RMC::Medals.Length; i++) {
-                    string goalMedal = RMC::Medals[i];
-
-                    if (UI::Selectable(goalMedal, PluginSettings::RMC_GoalMedal == goalMedal)) {
-                        PluginSettings::RMC_GoalMedal = goalMedal;
-                    }
-
-                    if (PluginSettings::RMC_GoalMedal == goalMedal) {
-                        UI::SetItemDefaultFocus();
-                    }
+            UI::BeginTabBar("RMCActivitiesTabBar", UI::TabBarFlags::FittingPolicyResizeDown);
+            //Random Map Challenge Tab
+            if(UI::BeginTabItem(Icons::ClockO + " Challenge"))
+            {
+                if (UI::GreenButton(Icons::ClockO + " Start Random Map Challenge"))
+                {
+                    selectedGameMode = GameMode::Challenge;
+                    startnew(Start);
                 }
-                UI::EndCombo();
+                UI::EndTabItem();
             }
-            UI::SameLine();
-            UI::Text("medals");
-#if TMNEXT
-            if (UI::TreeNode("\\$f50" + Icons::Fire + " \\$zChaos Mode")) {
+            //Random Map Survival Tab
+            if(UI::BeginTabItem(Icons::Heart + " Survival")) 
+            {
+                if (UI::GreenButton(Icons::Heart + " Start Random Map Survival"))
+                {
+                    selectedGameMode = GameMode::Survival;
+                    startnew(Start);
+                }
+                UI::EndTabItem();
+            }
+            //Chaos Mode Tab
+            if(UI::BeginTabItem(Icons::Fire + " Chaos")) 
+            {
 #if DEPENDENCY_CHAOSMODE
                 if (UI::RedButton(Icons::Fire + " Start RMC with Chaos Mode")){
                     selectedGameMode = GameMode::ChallengeChaos;
@@ -48,10 +45,10 @@ namespace RMC
                     Renderables::Add(ChaosModeIntroModalDialog());
                 }
 #endif
-                UI::TreePop();
+                UI::EndTabItem();
             }
-#endif
-            if (UI::TreeNode(MX_COLOR_STR + Icons::Trophy + " \\$zObjective Mode")) {
+            //Objective Mode Tab
+            if(UI::BeginTabItem(Icons::Trophy + " Objective")) {
                 UI::TextDisabled(Icons::InfoCircle + " Hover for infos");
                 UI::SetPreviousTooltip("Set a goal, and get it done as quickly as possible!\nSkips are unlimited but costs you time spending on the map.");
                 UI::Text("Goal:");
@@ -69,65 +66,88 @@ namespace RMC
                 }
                 if (UI::Button(Icons::Table + " Objective Mode Standings"))
                     OpenBrowserURL("https://www.speedrun.com/tmce#Flinks_Random_Map_Challenge");
-                UI::TreePop();
+                UI::EndTabItem();
             }
-#if TMNEXT
-            if (Permissions::CreateActivity() && UI::TreeNode(MX_COLOR_STR + Icons::Users + " \\$zRandom Map Together \\$f33(BETA)")) {
+            //Random Map Together
+            if(UI::BeginTabItem(Icons::Users + " Together")) {
+                if (Permissions::CreateActivity() )
+                {
 #if DEPENDENCY_NADEOSERVICES
-                UI::TextDisabled(Icons::InfoCircle + " Click for help");
-                if (UI::IsItemClicked()) {
-                    Renderables::Add(RMTHelpModalDialog());
-                }
-                UI::Text("Club ID:");
-                UI::SameLine();
-                UI::SetNextItemWidth(150);
-                PluginSettings::RMC_Together_ClubId = Text::ParseInt(UI::InputText("##RMTSetClubID", tostring(PluginSettings::RMC_Together_ClubId), false, UI::InputTextFlags::CharsDecimal));
-
-                UI::Text("Room ID:");
-                UI::SameLine();
-                UI::SetNextItemWidth(150);
-                PluginSettings::RMC_Together_RoomId = Text::ParseInt(UI::InputText("##RMTSetRoomID", tostring(PluginSettings::RMC_Together_RoomId), false, UI::InputTextFlags::CharsDecimal));
-
-                bool RMT_isServerOK = false;
-
-                if (PluginSettings::RMC_Together_ClubId > 0 && PluginSettings::RMC_Together_RoomId > 0) {
-                    UI::BeginDisabled(MXNadeoServicesGlobal::isCheckingRoom);
-                    if (UI::Button("Check Room")) {
-                        startnew(MXNadeoServicesGlobal::CheckNadeoRoomAsync);
+                    UI::TextDisabled(Icons::InfoCircle + " Click for help");
+                    if (UI::IsItemClicked()) {
+                        Renderables::Add(RMTHelpModalDialog());
                     }
-                    UI::EndDisabled();
-                    if (MXNadeoServicesGlobal::isCheckingRoom) {
-                        int HourGlassValue = Time::Stamp % 3;
-                        string Hourglass = (HourGlassValue == 0 ? Icons::HourglassStart : (HourGlassValue == 1 ? Icons::HourglassHalf : Icons::HourglassEnd));
-                        UI::TextDisabled(Hourglass + " Checking...");
+                    UI::Text("Club ID:");
+                    UI::SameLine();
+                    UI::SetNextItemWidth(150);
+                    PluginSettings::RMC_Together_ClubId = Text::ParseInt(UI::InputText("##RMTSetClubID", tostring(PluginSettings::RMC_Together_ClubId), false, UI::InputTextFlags::CharsDecimal));
+
+                    UI::Text("Room ID:");
+                    UI::SameLine();
+                    UI::SetNextItemWidth(150);
+                    PluginSettings::RMC_Together_RoomId = Text::ParseInt(UI::InputText("##RMTSetRoomID", tostring(PluginSettings::RMC_Together_RoomId), false, UI::InputTextFlags::CharsDecimal));
+
+                    bool RMT_isServerOK = false;
+
+                    if (PluginSettings::RMC_Together_ClubId > 0 && PluginSettings::RMC_Together_RoomId > 0) {
+                        UI::BeginDisabled(MXNadeoServicesGlobal::isCheckingRoom);
+                        if (UI::Button("Check Room")) {
+                            startnew(MXNadeoServicesGlobal::CheckNadeoRoomAsync);
+                        }
+                        UI::EndDisabled();
+                        if (MXNadeoServicesGlobal::isCheckingRoom) {
+                            int HourGlassValue = Time::Stamp % 3;
+                            string Hourglass = (HourGlassValue == 0 ? Icons::HourglassStart : (HourGlassValue == 1 ? Icons::HourglassHalf : Icons::HourglassEnd));
+                            UI::TextDisabled(Hourglass + " Checking...");
+                        }
+                        if (MXNadeoServicesGlobal::foundRoom !is null) {
+                            RMT_isServerOK = true;
+                            UI::Text("Room found:");
+                            UI::Text("'"+MXNadeoServicesGlobal::foundRoom.name+"', in club '"+StripFormatCodes(MXNadeoServicesGlobal::foundRoom.clubName)+"'");
+                        }
                     }
-                    if (MXNadeoServicesGlobal::foundRoom !is null) {
-                        RMT_isServerOK = true;
-                        UI::Text("Room found:");
-                        UI::Text("'"+MXNadeoServicesGlobal::foundRoom.name+"', in club '"+StripFormatCodes(MXNadeoServicesGlobal::foundRoom.clubName)+"'");
+                    if (RMT_isServerOK && !TM::IsInServer()) {
+                        UI::BeginDisabled();
+                        UI::GreyButton(Icons::Users + " Start Random Map Together");
+                        UI::Text("\\$a50" + Icons::ExclamationTriangle + " \\$zPlease join the room before continuing");
+                        UI::EndDisabled();
                     }
-                }
-                if (RMT_isServerOK && !TM::IsInServer()) {
-                    UI::BeginDisabled();
-                    UI::GreyButton(Icons::Users + " Start Random Map Together");
-                    UI::Text("\\$a50" + Icons::ExclamationTriangle + " \\$zPlease join the room before continuing");
-                    UI::EndDisabled();
-                }
-                if (RMT_isServerOK && TM::IsInServer() && UI::GreenButton(Icons::Users + " Start Random Map Together")){
-                    selectedGameMode = GameMode::Together;
-                    startnew(CoroutineFunc(Together.StartRMT));
-                }
+                    if (RMT_isServerOK && TM::IsInServer() && UI::GreenButton(Icons::Users + " Start Random Map Together")){
+                        selectedGameMode = GameMode::Together;
+                        startnew(CoroutineFunc(Together.StartRMT));
+                    }
 #else
-                UI::Text("NadeoServices dependency not found, your Openplanet installation may be corrupt!");
+                    UI::Text("NadeoServices dependency not found, your Openplanet installation may be corrupt!");
 #endif
-                UI::TreePop();
+                } 
+                else {
+                   UI::Text(Icons::TimesCircle + " You have not the permissions to play local maps");
+                }
+                UI::EndTabItem();
             }
-#endif
-#if TMNEXT
-        } else {
-            UI::Text(Icons::TimesCircle + " You have not the permissions to play local maps");
+            UI::EndTabBar();
+
+            //Medal Type Selector
+            UI::SetNextItemWidth(100);
+            if (UI::BeginCombo("##GoalMedalObjectiveMode", PluginSettings::RMC_GoalMedal)){
+                for (uint i = 0; i < RMC::Medals.Length; i++) {
+                    string goalMedal = RMC::Medals[i];
+
+                    if (UI::Selectable(goalMedal, PluginSettings::RMC_GoalMedal == goalMedal)) {
+                        PluginSettings::RMC_GoalMedal = goalMedal;
+                    }
+
+                    if (PluginSettings::RMC_GoalMedal == goalMedal) {
+                        UI::SetItemDefaultFocus();
+                    }
+                }
+                UI::EndCombo();
+            }
+            UI::SameLine();
+            UI::Text("medals");
         }
-#endif
+
+        //Bottom Settings
         UI::Separator();
         if (UI::Button(Icons::Table + " Standings")) {
             OpenBrowserURL("https://docs.google.com/spreadsheets/d/1Byoa0ZIakuhK02n3a5FcTNYIhJksX25tqU455Lg-vkI/edit?usp=sharing");
